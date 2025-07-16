@@ -44,7 +44,7 @@ export const rides = t.pgTable(
     pickupLng: t.doublePrecision("pickup_lng"),
     dropLat: t.doublePrecision("drop_lat"),
     dropLng: t.doublePrecision("drop_lng"),
-    distanceKm: t.decimal("distance_km", { precision: 5, scale: 2 }),
+    distanceKm: t.integer("distance_km"),
     baseFare: t.decimal("base_fare", { precision: 10, scale: 2 }),
     surgeMultiplier: t.decimal("surge_multiplier", { precision: 3, scale: 2 }),
     totalFare: t.decimal("total_fare", { precision: 10, scale: 2 }),

@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import db from "../lib/db";
 import { rides } from "../lib/db/schema/ride";
-
+import { driverAvailability } from "../lib/db/schema/driverAvailability";
 import type { InsertRide } from "../lib/db/schema/ride";
 import { eq } from "drizzle-orm";
 
@@ -57,10 +57,32 @@ app.put("/:id/status", async (c) => {
     return c.text("Invalid status", 400);
   }
 
-  const result = await db.update(rides).set({ status }).where(eq(rides.id, id));
+  // 1. Update ride status
+  const rideResult = await db.update(rides).set({ status }).where(eq(rides.id, id)).returning();
 
-  return c.json({ message: "Status updated", result });
+  const updatedRide = rideResult[0];
+  if (!updatedRide) return c.text("Ride not found", 404);
+
+
+
+  // 2. If completed or cancelled → mark driver available again
+  if (status === "completed" || status === "cancelled") {
+    if(!updatedRide.driverId) {
+      return c.text("Driver ID not found for this ride", 400);
+    }
+
+    if( driverAvailability === undefined) {
+      return c.text("Driver availability schema not found", 500);
+    }
+
+    await db.update(driverAvailability)
+      .set({ isAvailable: true })
+      .where(eq(driverAvailability.driverId, updatedRide.driverId));
+  }
+
+  return c.json({ message: "Status updated", ride: updatedRide });
 });
+
 
 app.get("/", async (c) => {
   const result = await db.select().from(rides);

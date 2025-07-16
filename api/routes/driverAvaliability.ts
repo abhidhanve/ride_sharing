@@ -59,4 +59,25 @@ app.delete("/:id", async (c) => {
   return c.json({ message: "Driver availability deleted", result });
 });
 
+
+app.patch("/:id/toggle", async (c) => {
+  const id = Number(c.req.param("id"));
+
+  const current = await db.query.driverAvailability.findFirst({
+    where: (d, { eq }) => eq(d.driverId, id),
+  });
+
+  if (!current) return c.text("Driver not found", 404);
+
+  const newAvailability = !current.isAvailable;
+
+  const result = await db.update(driverAvailability)
+    .set({ isAvailable: newAvailability })
+    .where(eq(driverAvailability.driverId, id));
+
+  return c.json({ message: "Availability toggled", isAvailable: newAvailability });
+});
+
+
+
 export default app;

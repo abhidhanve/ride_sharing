@@ -2,11 +2,11 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 // import env from "../env";
 
-// Import route handlers
+
 import userRoutes from "./routes/user";
 import rideRoutes from "./routes/ride";
-// import driverRoutes from "../routes/driver";
-// import feedbackRoutes from "../routes/feedback";
+import matchDriverRoutes from "./routes/matchDriver";
+import driverAvailabilityRoutes from "./routes/driverAvaliability"; 
 
 const app = new Hono();
 
@@ -30,10 +30,12 @@ app.use(
 // Register route modules
 app.route("/user", userRoutes);
 app.route("/ride", rideRoutes);
-// app.route("/driver", driverRoutes);
-// app.route("/feedback", feedbackRoutes);
+app.route("/matchdriver", matchDriverRoutes);
+app.route("/driveravailability", driverAvailabilityRoutes);
 
-// (Optional: expose internal stats)
+
+
+
 let servedSessions = 0;
 app.get("/stats", (ctx) => {
   servedSessions++;
