@@ -14,6 +14,11 @@ app.post("/", async (c) => {
   const totalFare = baseFare * surgeMultiplier;
 
   const body = await c.req.json();
+
+  if (!body.riderId || !body.driverId || !body.pickupLat || !body.pickupLng || !body.dropLat || !body.dropLng) {
+    return c.text("Missing required fields", 400);
+  }
+
   const insertData: InsertRide = {
     riderId: body.riderId,
     driverId: body.driverId,
@@ -56,5 +61,40 @@ app.put("/:id/status", async (c) => {
 
   return c.json({ message: "Status updated", result });
 });
+
+app.get("/", async (c) => {
+  const result = await db.select().from(rides);
+  return c.json(result);
+});
+
+
+app.put("/:id", async (c) => {
+  const id = Number(c.req.param("id"));
+  const body = await c.req.json();
+
+  const result = await db.update(rides).set({
+    riderId: body.riderId,
+    driverId: body.driverId,
+    pickupLat: body.pickupLat,
+    pickupLng: body.pickupLng,
+    dropLat: body.dropLat,
+    dropLng: body.dropLng,
+    distanceKm: body.distanceKm,
+    baseFare: body.baseFare,
+    surgeMultiplier: body.surgeMultiplier,
+    totalFare: body.totalFare,
+    status: body.status,
+  }).where(eq(rides.id, id));
+
+  return c.json({ message: "Ride updated", result });
+});
+
+app.delete("/:id", async (c) => {
+  const id = Number(c.req.param("id"));
+
+  const result = await db.delete(rides).where(eq(rides.id, id));
+  return c.json({ message: "Ride deleted", result });
+});
+
 
 export default app;

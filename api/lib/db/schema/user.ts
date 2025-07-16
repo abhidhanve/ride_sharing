@@ -21,3 +21,6 @@ export const users = t.pgTable(
     t.index("email_idx").on(table.email),
   ]
 );
+
+
+export type InsertUser = typeof users.$inferInsert;

@@ -3,7 +3,7 @@ import { cors } from "hono/cors";
 // import env from "../env";
 
 // Import route handlers
-// import userRoutes from "../routes/user";
+import userRoutes from "./routes/user";
 import rideRoutes from "./routes/ride";
 // import driverRoutes from "../routes/driver";
 // import feedbackRoutes from "../routes/feedback";
@@ -28,7 +28,7 @@ app.use(
 );
 
 // Register route modules
-// app.route("/user", userRoutes);
+app.route("/user", userRoutes);
 app.route("/ride", rideRoutes);
 // app.route("/driver", driverRoutes);
 // app.route("/feedback", feedbackRoutes);
