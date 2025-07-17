@@ -1,6 +1,6 @@
 const envKeys = [
-    // "PRIVY_APP_SECRET",
-    // "PRIVY_APP_ID",
+    "PRIVY_APP_SECRET",
+    "PRIVY_APP_ID",
     "DB_URI",
     "NODE_ENV",
 ] as const;

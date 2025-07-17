@@ -7,17 +7,20 @@ import { calculateDistanceKm } from "../utils/haversine";
 import { matchDriverSchema } from "../lib/validators/matchDriver.ts";
 import type { MatchDriverInput } from "../lib/validators/matchDriver.ts";
 
+import { authMiddleware, isAuthenticated } from "../middleware/authMiddleware.ts";
+
 const app = new Hono();
 
-app.post("/", async (c) => {
+app.use("*", authMiddleware, isAuthenticated); // 🔐 protect all
 
+// 🚘 Match driver (authenticated riders only)
+app.post("/", async (c) => {
   let parsed: MatchDriverInput;
 
   try {
     const body = await c.req.json();
     console.log("Match Driver Request Body:", body);
     parsed = matchDriverSchema.parse(body);
-
   } catch (err) {
     return c.json({ error: "Invalid input", details: err }, 400);
   }

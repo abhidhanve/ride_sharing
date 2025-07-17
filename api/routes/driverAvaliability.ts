@@ -3,7 +3,11 @@ import db from "../lib/db";
 import { driverAvailability } from "../lib/db/schema/driverAvailability";
 import { eq } from "drizzle-orm";
 
+import { authMiddleware, isAuthenticated } from "../middleware/authMiddleware";
+
 const app = new Hono();
+
+app.use("*", authMiddleware, isAuthenticated); // 🔐 protect all routes
 
 // ✅ Get all driver availability
 app.get("/", async (c) => {
@@ -50,7 +54,7 @@ app.put("/:id", async (c) => {
   return c.json({ message: "Availability updated", result });
 });
 
-// ✅ Optional: Delete availability record
+// ✅ Delete availability
 app.delete("/:id", async (c) => {
   const id = Number(c.req.param("id"));
   const result = await db
@@ -59,7 +63,7 @@ app.delete("/:id", async (c) => {
   return c.json({ message: "Driver availability deleted", result });
 });
 
-
+// ✅ Toggle availability
 app.patch("/:id/toggle", async (c) => {
   const id = Number(c.req.param("id"));
 
@@ -77,7 +81,5 @@ app.patch("/:id/toggle", async (c) => {
 
   return c.json({ message: "Availability toggled", isAvailable: newAvailability });
 });
-
-
 
 export default app;

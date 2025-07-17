@@ -5,9 +5,15 @@ import { driverAvailability } from "../lib/db/schema/driverAvailability";
 import type { InsertRide } from "../lib/db/schema/ride";
 import { eq } from "drizzle-orm";
 
+import {
+  authMiddleware,
+  isAuthenticated,
+} from "../middleware/authMiddleware"; // adjust import path as needed
+
 const app = new Hono();
 
-app.post("/", async (c) => {
+// 🔐 Create a ride - Authenticated users only
+app.post("/", authMiddleware, isAuthenticated, async (c) => {
   const baseFare = 30;
   const requestHour = new Date().getHours();
   const surgeMultiplier = requestHour >= 17 && requestHour <= 20 ? 1.5 : 1.0;
@@ -37,7 +43,8 @@ app.post("/", async (c) => {
   return c.json({ message: "Ride requested", result });
 });
 
-app.get("/:id", async (c) => {
+// 🔐 Get a specific ride - Only logged in (you can add user-specific access later)
+app.get("/:id", authMiddleware, isAuthenticated, async (c) => {
   const id = Number(c.req.param("id"));
   const result = await db.query.rides.findFirst({
     where: (ride, { eq }) => eq(ride.id, id),
@@ -47,8 +54,8 @@ app.get("/:id", async (c) => {
   return c.json(result);
 });
 
-// 🔸 PUT /api/ride/:id/status - Update ride status
-app.put("/:id/status", async (c) => {
+// 🔐 Update ride status (complete, cancel, etc.)
+app.put("/:id/status", authMiddleware, isAuthenticated, async (c) => {
   const id = Number(c.req.param("id"));
   const body = await c.req.json();
   const status = body.status;
@@ -63,16 +70,10 @@ app.put("/:id/status", async (c) => {
   const updatedRide = rideResult[0];
   if (!updatedRide) return c.text("Ride not found", 404);
 
-
-
   // 2. If completed or cancelled → mark driver available again
   if (status === "completed" || status === "cancelled") {
-    if(!updatedRide.driverId) {
+    if (!updatedRide.driverId) {
       return c.text("Driver ID not found for this ride", 400);
-    }
-
-    if( driverAvailability === undefined) {
-      return c.text("Driver availability schema not found", 500);
     }
 
     await db.update(driverAvailability)
@@ -83,14 +84,14 @@ app.put("/:id/status", async (c) => {
   return c.json({ message: "Status updated", ride: updatedRide });
 });
 
-
-app.get("/", async (c) => {
+// 🔐 Get all rides - Only authenticated
+app.get("/", authMiddleware, isAuthenticated, async (c) => {
   const result = await db.select().from(rides);
   return c.json(result);
 });
 
-
-app.put("/:id", async (c) => {
+// 🔐 Update ride - Only authenticated (useful for admin/moderator maybe)
+app.put("/:id", authMiddleware, isAuthenticated, async (c) => {
   const id = Number(c.req.param("id"));
   const body = await c.req.json();
 
@@ -111,12 +112,12 @@ app.put("/:id", async (c) => {
   return c.json({ message: "Ride updated", result });
 });
 
-app.delete("/:id", async (c) => {
+// 🔐 Delete ride - Only authenticated (admin or owner logic can be added later)
+app.delete("/:id", authMiddleware, isAuthenticated, async (c) => {
   const id = Number(c.req.param("id"));
 
   const result = await db.delete(rides).where(eq(rides.id, id));
   return c.json({ message: "Ride deleted", result });
 });
-
 
 export default app;
